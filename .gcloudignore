@@ -1,0 +1,11 @@
+.git/
+.gitignore
+**/__pycache__/
+**/*.pyc
+audios_output/
+**/.env
+**/venv/
+**/.venv/
+*.ipynb
+frontend/node_modules/
+frontend/dist/

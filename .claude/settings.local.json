@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(rm -f src/App.css src/index.css src/assets/react.svg public/vite.svg)",
+      "Bash(rmdir src/assets)",
+      "Bash(mkdir -p src/components)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(nohup npm run dev)",
+      "Bash(curl -s http://127.0.0.1:5173/api/config)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(curl -sv http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5173/api/config)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"app.app.run\")",
+      "Bash(curl -s http://localhost:5173/ -o /dev/null -w \"frontend status: %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:8080/api/config -w \"\\\\nbackend status: %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:8080/api/config -o /tmp/resp.json -w \"%{http_code}\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/api/config)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8090/api/config)",
+      "PowerShell(netsh int ipv4 show excludedportrange protocol=tcp)",
+      "PowerShell(Get-Process -Id 6948 -ErrorAction SilentlyContinue)",
+      "Bash(curl -s http://localhost:5173/api/config -w \"\\\\nproxy status: %{http_code}\\\\n\")",
+      "Bash(pkill -f \"8090\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8090 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $_; Get-Process -Id $_.OwningProcess | Select-Object Id, ProcessName })",
+      "Bash(curl -s http://localhost:8091/api/voices -w \"\\\\nstatus:%{http_code}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+**/__pycache__/
+**/*.pyc
+audios_output/
+.git/
+.gitignore
+**/.env
+*.ipynb
+**/venv/
+**/.venv/
+README.md
+frontend/node_modules/
+frontend/dist/
