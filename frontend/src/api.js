@@ -41,3 +41,13 @@ export async function generateAudio(payload) {
   if (!res.ok) throw new Error(await parseError(res, "Error al generar"));
   return res.blob();
 }
+
+export async function generatePodcast(payload) {
+  const res = await fetch("/api/generate_podcast", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await parseError(res, "Error al generar el podcast"));
+  return res.blob();
+}

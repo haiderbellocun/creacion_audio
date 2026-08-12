@@ -119,6 +119,42 @@ def api_generate():
         return jsonify({"error": f"Error al generar el MP3: {e}"}), 502
 
 
+@app.route("/api/generate_podcast", methods=["POST"])
+def api_generate_podcast():
+    client = get_client()
+    if client is None:
+        return jsonify({"error": "Falta la variable ELEVENLABS_API_KEY en el servidor."}), 500
+    data = request.get_json(force=True, silent=True) or {}
+    model_id = data.get("model_id", "eleven_multilingual_v2")
+    segmentos = data.get("segments") or []
+
+    lineas = [
+        (s.get("voice_id"), (s.get("text") or "").strip())
+        for s in segmentos
+        if s.get("voice_id") and (s.get("text") or "").strip()
+    ]
+    if not lineas:
+        return jsonify({"error": "Agrega al menos una línea con voz y texto."}), 400
+
+    try:
+        settings = VoiceSettings(
+            stability=float(data.get("stability", 0.55)),
+            similarity_boost=float(data.get("similarity_boost", 0.80)),
+            style=float(data.get("style", 0.20)),
+            use_speaker_boost=bool(data.get("use_speaker_boost", True)),
+        )
+        partes = [
+            tts_bytes(client, voice_id, model_id, texto, settings)
+            for voice_id, texto in lineas
+        ]
+        audio = b"".join(partes)
+        nombre = slugify(data.get("filename"))
+        headers = {"Content-Disposition": f'attachment; filename="{nombre}.mp3"'}
+        return Response(audio, mimetype="audio/mpeg", headers=headers)
+    except Exception as e:
+        return jsonify({"error": f"Error al generar el podcast: {e}"}), 502
+
+
 # Sirve el build de React en producción (Vite genera index.html + assets/).
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")

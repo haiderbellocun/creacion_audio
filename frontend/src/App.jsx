@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import VoicePanel from "./components/VoicePanel.jsx";
 import TextPanel from "./components/TextPanel.jsx";
+import PodcastPanel from "./components/PodcastPanel.jsx";
 import Toast from "./components/Toast.jsx";
-import { getConfig, getVoices, fetchPreview, generateAudio } from "./api.js";
+import { getConfig, getVoices, fetchPreview, generateAudio, generatePodcast } from "./api.js";
 
 const DEFAULT_SETTINGS = {
   stability: 0.55,
@@ -20,8 +21,13 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState("");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
+  const [mode, setMode] = useState("single");
+
   const [text, setText] = useState("");
   const [filename, setFilename] = useState("mi_audio");
+
+  const [voiceSlots, setVoiceSlots] = useState(["", ""]);
+  const [script, setScript] = useState("");
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -52,10 +58,83 @@ export default function App() {
     getVoices()
       .then((lista) => {
         setVoices(lista);
-        if (lista.length) setSelectedVoice(lista[0].id);
+        if (lista.length) {
+          setSelectedVoice(lista[0].id);
+          setVoiceSlots((prev) =>
+            prev.map((v, i) => v || lista[i]?.id || lista[0].id)
+          );
+        }
       })
       .catch((e) => showToast(e.message));
   }, []);
+
+  function addVoiceSlot() {
+    setVoiceSlots((prev) => [...prev, voices[prev.length]?.id || voices[0]?.id || ""]);
+  }
+
+  function removeVoiceSlot(index) {
+    setVoiceSlots((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateVoiceSlot(index, voiceId) {
+    setVoiceSlots((prev) => prev.map((v, i) => (i === index ? voiceId : v)));
+  }
+
+  // Convierte "Voz 1: hola\nVoz 2: y yo..." en [{voice_id, text}, ...]
+  function parseScript(rawScript, slots) {
+    const lines = rawScript.split("\n");
+    const segments = [];
+    let current = null;
+    let firstLineSeen = false;
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line) continue;
+      const match = line.match(/^voz\s*(\d+)\s*:\s*(.*)$/i);
+      if (match) {
+        const slotIndex = parseInt(match[1], 10) - 1;
+        const voiceId = slots[slotIndex];
+        if (!voiceId) {
+          return { error: `No hay una voz asignada a "Voz ${match[1]}". Revisa las voces arriba.` };
+        }
+        current = { voice_id: voiceId, text: match[2].trim() };
+        segments.push(current);
+      } else if (current) {
+        current.text = `${current.text} ${line}`.trim();
+      } else {
+        firstLineSeen = true;
+        break;
+      }
+    }
+    if (firstLineSeen) {
+      return { error: 'Cada línea debe empezar con "Voz 1:", "Voz 2:", etc.' };
+    }
+    return { segments: segments.filter((s) => s.text) };
+  }
+
+  async function handleGeneratePodcast() {
+    if (!script.trim()) return showToast("Escribe el guion del podcast.");
+    const { segments, error } = parseScript(script, voiceSlots);
+    if (error) return showToast(error);
+    if (!segments.length) return showToast("Agrega al menos una línea con texto.");
+    setGenerating(true);
+    try {
+      const blob = await generatePodcast({
+        segments,
+        model_id: selectedModel,
+        filename: filename.trim() || "mi_podcast",
+        ...settings,
+      });
+      if (resultObjectUrl.current) URL.revokeObjectURL(resultObjectUrl.current);
+      resultObjectUrl.current = URL.createObjectURL(blob);
+      setResultUrl(resultObjectUrl.current);
+      showToast("Podcast generado correctamente.", "ok");
+    } catch (e) {
+      showToast(e.message);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handlePreview() {
     if (!selectedVoice) return showToast("Selecciona una voz primero.");
@@ -145,32 +224,69 @@ export default function App() {
           </div>
         )}
 
-        <div className="grid">
-          <VoicePanel
+        <div className="mode-tabs">
+          <button
+            type="button"
+            className={`mode-tab ${mode === "single" ? "active" : ""}`}
+            onClick={() => setMode("single")}
+          >
+            🗣️ Voz única
+          </button>
+          <button
+            type="button"
+            className={`mode-tab ${mode === "podcast" ? "active" : ""}`}
+            onClick={() => setMode("podcast")}
+          >
+            🎧 Podcast (varias voces)
+          </button>
+        </div>
+
+        {mode === "single" ? (
+          <div className="grid">
+            <VoicePanel
+              voices={voices}
+              filtro={filtro}
+              onFiltroChange={setFiltro}
+              selectedVoice={selectedVoice}
+              onVoiceChange={setSelectedVoice}
+              modelos={modelos}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              settings={settings}
+              onSettingsChange={setSettings}
+              onPreview={handlePreview}
+              previewLoading={previewLoading}
+              previewUrl={previewUrl}
+            />
+            <TextPanel
+              text={text}
+              onTextChange={setText}
+              filename={filename}
+              onFilenameChange={setFilename}
+              onGenerate={handleGenerate}
+              generating={generating}
+              resultUrl={resultUrl}
+            />
+          </div>
+        ) : (
+          <PodcastPanel
             voices={voices}
-            filtro={filtro}
-            onFiltroChange={setFiltro}
-            selectedVoice={selectedVoice}
-            onVoiceChange={setSelectedVoice}
+            voiceSlots={voiceSlots}
+            onAddVoiceSlot={addVoiceSlot}
+            onRemoveVoiceSlot={removeVoiceSlot}
+            onUpdateVoiceSlot={updateVoiceSlot}
+            script={script}
+            onScriptChange={setScript}
             modelos={modelos}
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
-            settings={settings}
-            onSettingsChange={setSettings}
-            onPreview={handlePreview}
-            previewLoading={previewLoading}
-            previewUrl={previewUrl}
-          />
-          <TextPanel
-            text={text}
-            onTextChange={setText}
             filename={filename}
             onFilenameChange={setFilename}
-            onGenerate={handleGenerate}
+            onGenerate={handleGeneratePodcast}
             generating={generating}
             resultUrl={resultUrl}
           />
-        </div>
+        )}
 
         <Toast message={toast.message} type={toast.type} />
       </main>

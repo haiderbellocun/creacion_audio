@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill //F //PID 101228)",
+      "Bash(taskkill //F //PID 92876)",
+      "Bash(curl -s -o /tmp/r1.json -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:8081/api/generate_podcast -H \"Content-Type: application/json\" -d '{\"segments\": []}')",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /tmp/r2.json -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:8081/api/generate_podcast -H \"Content-Type: application/json\" -d '{\"segments\": [{\"voice_id\": \"abc\", \"text\": \"   \"}]}')",
+      "Bash(curl -s -o /tmp/r3.json -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:8081/api/generate_podcast -H \"Content-Type: application/json\" -d '{\"segments\": [{\"voice_id\": \"abc\", \"text\": \"hola\"}]}')",
+      "Bash(pkill -f \".venv_test/Scripts/python.exe\")",
+      "Bash(taskkill //F //PID 30616)",
+      "Bash(git checkout *)",
+      "Bash(cd /c/creacion_audio/frontend && npm run build 2>&1 | tail -40)",
+      "Read(//c/creacion_audio/frontend/**)",
+      "Bash(curl -s http://localhost:8080/api/config)",
+      "Bash(curl -s http://localhost:8080/healthz)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}
