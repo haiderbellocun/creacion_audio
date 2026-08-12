@@ -13,7 +13,8 @@
       "Bash(cd /c/creacion_audio/frontend && npm run build 2>&1 | tail -40)",
       "Read(//c/creacion_audio/frontend/**)",
       "Bash(curl -s http://localhost:8080/api/config)",
-      "Bash(curl -s http://localhost:8080/healthz)"
+      "Bash(curl -s http://localhost:8080/healthz)",
+      "Bash(cd /c/creacion_audio/frontend && npm run build 2>&1 | tail -30)"
     ],
     "additionalDirectories": [
       "\\tmp"

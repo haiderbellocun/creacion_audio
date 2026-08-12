@@ -4,6 +4,8 @@ export default function PodcastPanel({
   onAddVoiceSlot,
   onRemoveVoiceSlot,
   onUpdateVoiceSlot,
+  onPreviewSlot,
+  previewingSlot,
   script,
   onScriptChange,
   modelos,
@@ -42,6 +44,15 @@ export default function PodcastPanel({
                 <option key={v.id} value={v.id}>{v.name}</option>
               ))}
             </select>
+            <button
+              type="button"
+              className="btn-icon"
+              title="Escuchar muestra"
+              disabled={!voiceId || previewingSlot === i}
+              onClick={() => onPreviewSlot(i)}
+            >
+              {previewingSlot === i ? "⏳" : "🔊"}
+            </button>
             <button
               type="button"
               className="btn-icon btn-icon-danger"

@@ -125,7 +125,7 @@ body {
 
 /* Podcast: selector de voces */
 .voice-slots { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
-.voice-slot-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; }
+.voice-slot-row { display: grid; grid-template-columns: 64px 1fr auto auto; gap: 10px; align-items: center; }
 .voice-slot-row .input { margin: 0; }
 .voice-slot-tag {
   font-size: 12px; font-weight: 700; color: var(--eyebrow);
@@ -151,7 +151,7 @@ body {
   color: var(--eyebrow);
 }
 @media (max-width: 640px) {
-  .voice-slot-row { grid-template-columns: 1fr auto; }
+  .voice-slot-row { grid-template-columns: 1fr auto auto; }
   .voice-slot-tag { grid-column: 1 / -1; }
 }
 

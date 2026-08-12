@@ -28,6 +28,8 @@ export default function App() {
 
   const [voiceSlots, setVoiceSlots] = useState(["", ""]);
   const [script, setScript] = useState("");
+  const [previewingSlot, setPreviewingSlot] = useState(null);
+  const slotPreviewObjectUrl = useRef(null);
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -78,6 +80,23 @@ export default function App() {
 
   function updateVoiceSlot(index, voiceId) {
     setVoiceSlots((prev) => prev.map((v, i) => (i === index ? voiceId : v)));
+  }
+
+  async function handlePreviewSlot(index) {
+    const voiceId = voiceSlots[index];
+    if (!voiceId) return showToast("Selecciona una voz primero.");
+    setPreviewingSlot(index);
+    try {
+      const blob = await fetchPreview(voiceId, selectedModel);
+      if (slotPreviewObjectUrl.current) URL.revokeObjectURL(slotPreviewObjectUrl.current);
+      slotPreviewObjectUrl.current = URL.createObjectURL(blob);
+      const audio = new Audio(slotPreviewObjectUrl.current);
+      audio.play();
+    } catch (e) {
+      showToast(e.message);
+    } finally {
+      setPreviewingSlot(null);
+    }
   }
 
   // Convierte "Voz 1: hola\nVoz 2: y yo..." en [{voice_id, text}, ...]
@@ -275,6 +294,8 @@ export default function App() {
             onAddVoiceSlot={addVoiceSlot}
             onRemoveVoiceSlot={removeVoiceSlot}
             onUpdateVoiceSlot={updateVoiceSlot}
+            onPreviewSlot={handlePreviewSlot}
+            previewingSlot={previewingSlot}
             script={script}
             onScriptChange={setScript}
             modelos={modelos}
